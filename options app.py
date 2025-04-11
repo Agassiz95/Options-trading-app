@@ -136,7 +136,7 @@ def get_risk_free_rate(default=0.045):
         treasury = yf.Ticker("^IRX").history(period="1d")['Close'].iloc[-1]
         return treasury / 100
     except Exception as e:
-        print(f"⚠️ Warning: Could not fetch risk-free rate. Using default {default:.2%}.")
+        print(f"Warning: Could not fetch risk-free rate. Using default {default:.2%}.")
         return default
 
 def fetch_market_price(ticker, strike, expiration, option_type):
@@ -152,7 +152,7 @@ def fetch_market_price(ticker, strike, expiration, option_type):
                 float(row.iloc[0]['ask']),
             )
     except Exception as e:
-        print(f"⚠️ Warning: Could not fetch market option price: {e}")
+        print(f"Warning: Could not fetch market option price: {e}")
     return None, None, None
 
 def european_greeks(S, K, T, r, sigma, option_type='call'):
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     if pop is not None:
         print(f" Estimated Probability of Profit (ITM): {pop:.2%}")
         print(
-            "⚠️ Note: This is the probability of expiring in-the-money — not the probability of net profit (which depends on premium paid).")
+            "Note: This is the probability of expiring in-the-money — not the probability of net profit (which depends on premium paid).")
 
     # Plot both options
     S_range = np.linspace(0.5 * S0, 1.5 * S0, 200)
