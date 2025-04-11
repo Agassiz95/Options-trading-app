@@ -32,6 +32,32 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 from datetime import datetime
 from scipy.stats import norm
+from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
+
+def plot_volatility_surface(ticker, r):
+    strikes = np.linspace(0.5 * S0, 1.5 * S0, 25)
+    maturities = np.linspace(7, 180, 25)  # in days
+
+    X, Y = np.meshgrid(strikes, maturities)
+    Z = np.zeros_like(X)
+
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            T_sim = Y[i, j] / 365
+            K_sim = X[i, j]
+            Z[i, j] = european_option_bs(S0, K_sim, T_sim, r, sigma, option_type)
+
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='none')
+    ax.set_title(f'{ticker.upper()} Volatility Surface (Model-Based)')
+    ax.set_xlabel('Strike Price')
+    ax.set_ylabel('Days to Expiry')
+    ax.set_zlabel('Option Price')
+    fig.colorbar(surf, shrink=0.5, aspect=10)
+    plt.tight_layout()
+    plt.show()
+
 
 # --------------------------------------
 # Black-Scholes for European Call or Put
@@ -136,7 +162,7 @@ def get_risk_free_rate(default=0.045):
         treasury = yf.Ticker("^IRX").history(period="1d")['Close'].iloc[-1]
         return treasury / 100
     except Exception as e:
-        print(f"Warning: Could not fetch risk-free rate. Using default {default:.2%}.")
+        print(f" Warning: Could not fetch risk-free rate. Using default {default:.2%}.")
         return default
 
 def fetch_market_price(ticker, strike, expiration, option_type):
@@ -152,7 +178,7 @@ def fetch_market_price(ticker, strike, expiration, option_type):
                 float(row.iloc[0]['ask']),
             )
     except Exception as e:
-        print(f"Warning: Could not fetch market option price: {e}")
+        print(f" Warning: Could not fetch market option price: {e}")
     return None, None, None
 
 def european_greeks(S, K, T, r, sigma, option_type='call'):
@@ -196,6 +222,33 @@ def make_trade_suggestion(S, K, T, sigma, market_price, model_price, option_type
         suggestion = "ℹFairly priced — no strong edge detected"
 
     return suggestion, pop
+
+from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
+
+def plot_volatility_surface(ticker, r):
+    strikes = np.linspace(0.5 * S0, 1.5 * S0, 25)
+    maturities = np.linspace(7, 180, 25)  # in days
+
+    X, Y = np.meshgrid(strikes, maturities)
+    Z = np.zeros_like(X)
+
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            T_sim = Y[i, j] / 365
+            K_sim = X[i, j]
+            Z[i, j] = european_option_bs(S0, K_sim, T_sim, r, sigma, option_type)
+
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='none')
+    ax.set_title(f'{ticker.upper()} Volatility Surface (Model-Based)')
+    ax.set_xlabel('Strike Price')
+    ax.set_ylabel('Days to Expiry')
+    ax.set_zlabel('Option Price')
+    fig.colorbar(surf, shrink=0.5, aspect=10)
+    plt.tight_layout()
+    plt.show()
+
 
 # --------------------------------------
 # Main script prompt
@@ -249,7 +302,7 @@ if __name__ == "__main__":
     if pop is not None:
         print(f" Estimated Probability of Profit (ITM): {pop:.2%}")
         print(
-            "Note: This is the probability of expiring in-the-money — not the probability of net profit (which depends on premium paid).")
+            " Note: This is the probability of expiring in-the-money — not the probability of net profit (which depends on premium paid).")
 
     # Plot both options
     S_range = np.linspace(0.5 * S0, 1.5 * S0, 200)
@@ -267,3 +320,6 @@ if __name__ == "__main__":
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+    # Plot the volatility surface
+    plot_volatility_surface(ticker, r)
