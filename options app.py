@@ -223,7 +223,7 @@ def make_trade_suggestion(S, K, T, sigma, ask_price, bid_price, model_price, opt
     elif price_diff < -0.5:
         suggestion = f"Overpriced by ${-price_diff:.2f} — not favorable unless expectations are strong"
     else:
-        suggestion = "ℹ Fairly priced — no strong edge detected"
+        suggestion = "Fairly priced — no strong edge detected"
 
     return suggestion, pop
 
