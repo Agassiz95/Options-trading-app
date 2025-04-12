@@ -202,26 +202,31 @@ def european_greeks(S, K, T, r, sigma, option_type='call'):
     return delta, gamma, theta, vega, rho
 
 
-def make_trade_suggestion(S, K, T, sigma, market_price, model_price, option_type):
-    if market_price is None:
+def make_trade_suggestion(S, K, T, sigma, ask_price, bid_price, model_price, option_type):
+    if ask_price is None or bid_price is None:
         return "Market price unavailable.", None
 
-    # Mispricing and z-score
-    mispricing = market_price - model_price
+    # Define execution price for a long (buy) position
+    market_buy_price = ask_price
+    market_sell_price = bid_price
+
+    # Mispricing logic assumes long (buy) position
+    price_diff = model_price - market_buy_price
 
     # Estimate ITM probability from Black-Scholes d2
     d2 = (np.log(S / K) + (0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T)) - sigma * np.sqrt(T)
     pop = norm.cdf(d2) if option_type == 'call' else norm.cdf(-d2)
 
-    # Suggest action based on mispricing magnitude
-    if mispricing > 0.5:
-        suggestion = f"️Overpriced by ${mispricing:.2f} — consider selling"
-    elif mispricing < -0.5:
-        suggestion = f"Underpriced by ${-mispricing:.2f} — consider buying"
+    # Trade suggestion based on model vs execution price
+    if price_diff > 0.5:
+        suggestion = f"Underpriced by ${price_diff:.2f} — consider buying"
+    elif price_diff < -0.5:
+        suggestion = f"Overpriced by ${-price_diff:.2f} — not favorable unless expectations are strong"
     else:
-        suggestion = "ℹFairly priced — no strong edge detected"
+        suggestion = "ℹ Fairly priced — no strong edge detected"
 
     return suggestion, pop
+
 
 from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
 
@@ -297,7 +302,7 @@ if __name__ == "__main__":
     print(f"  Vega (per 1% IV): {vega:.4f}")
     print(f"  Rho (per 1% rate): {rho:.4f}")
 
-    suggestion, pop = make_trade_suggestion(S0, strike, T, sigma, market_last, euro_price, option_type)
+    suggestion, pop = make_trade_suggestion(S0, strike, T, sigma, market_ask, market_bid, euro_price, option_type)
     print(f"\n Trade Suggestion: {suggestion}")
     if pop is not None:
         print(f" Estimated Probability of Profit (ITM): {pop:.2%}")
